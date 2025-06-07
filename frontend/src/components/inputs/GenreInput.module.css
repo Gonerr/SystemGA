@@ -1,0 +1,19 @@
+.container {
+  margin-bottom: 2rem;
+}
+
+.inputContainer {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.genresContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.genre {
+  margin: 0.25rem;
+} 

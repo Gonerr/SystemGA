@@ -1,0 +1,479 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage{graphicx}
+
+\title{Отчет о покрытии кода тестами}
+\author{Анализ игровой индустрии}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Общая информация}
+В данном отчете представлены результаты тестирования основных компонентов системы анализа игровой индустрии. Система включает в себя несколько ключевых модулей, каждый из которых отвечает за определенный аспект анализа.
+
+\section{Покрытие кода тестами}
+В таблице \ref{tab:coverage} представлены данные о покрытии кода тестами для каждого модуля системы.
+
+\begin{table}[H]
+\centering
+\caption{Покрытие кода тестами по модулям}
+\label{tab:coverage}
+\begin{tabular}{lrrr}
+\toprule
+Модуль & Строк кода & Пропущено & Покрытие \\
+\midrule
+BaseAnalyzer & 159 & 95 & 40\% \\
+DataRepository & 70 & 25 & 64\% \\
+FeatureExtractor & 160 & 15 & 91\% \\
+GameAnalysisPipeline & 174 & 45 & 74\% \\
+GameClusterer & 229 & 45 & 80\% \\
+GameCompetitivenessAnalyzer & 121 & 20 & 83\% \\
+GameRecommendationAnalyzer & 141 & 35 & 75\% \\
+GameSimilarityAnalyzer & 98 & 25 & 74\% \\
+Decorators & 18 & 1 & 94\% \\
+\midrule
+\textbf{Итого} & \textbf{1310} & \textbf{306} & \textbf{77\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{my_folder/images/Тест_1.jpg}
+    \caption{Результаты выполнения модульных тестов: все 12 тестовых функций успешно пройдены (12 passed, 0 failed). Тесты охватывают все ключевые аспекты работы системы, включая анализ рекомендаций, ценовое позиционирование, уникальные особенности и обработку граничных случаев.}
+    \label{fig:tests}
+\end{figure}
+
+\section{Анализ результатов}
+Основные аналитические методы системы демонстрируют высокий уровень покрытия тестами:
+
+\begin{itemize}
+    \item Модуль кластеризации игр (GameClusterer) - 80\% покрытия
+    \item Анализ конкурентной способности (GameCompetitivenessAnalyzer) - 83\% покрытия
+    \item Поиск похожих игр (GameSimilarityAnalyzer) - 74\% покрытия
+\end{itemize}
+
+Особенно высокое покрытие тестами (91\%) демонстрирует модуль извлечения признаков (FeatureExtractor), что обеспечивает надежность базового функционала системы.
+
+\section{Тестовые сценарии}
+\begin{enumerate}[label=\arabic*.]
+    \item Тестирование передачи данных между FeatureExtractor и GameClusterer:
+    \begin{itemize}
+        \item Входные данные: массив необработанных данных.
+        \item Ожидаемый результат: корректный формат данных, передаваемых в GameClusterer.
+        \begin{lstlisting}[language=Python]
+def test_data_flow_between_extractor_and_clusterer(feature_extractor, clusterer):
+    sample_data = [
+        {"description": "An epic <b>RPG</b> with dragons!", "price": 59.99},
+        {"description": "<p>Fast-paced shooter</p>", "price": 19.99}
+    ]
+    
+    processed_data = feature_extractor.preprocess_data(sample_data)
+    cluster_labels = clusterer.perform_clustering(processed_data, n_clusters=2)
+    
+    assert len(cluster_labels) == len(processed_data)
+    assert all(isinstance(label, int) for label in cluster_labels)
+        \end{lstlisting}
+    \end{itemize}
+
+    \item Тестирование передачи данных между GameClusterer и GameCompetitivenessAnalyzer:
+    \begin{itemize}
+        \item Входные данные: кластеризованные данные и веса для расчета CI.
+        \item Ожидаемый результат: корректные индексы конкурентоспособности для каждого кластера.
+        \begin{lstlisting}[language=Python]
+def test_data_flow_between_clusterer_and_analyzer(clusterer, analyzer):
+    sample_features = np.array([
+        [0.5, 0.8],
+        [0.6, 0.75],
+        [0.2, 0.9]
+    ])
+    
+    cluster_labels = clusterer.perform_clustering(sample_features, n_clusters=2)
+    weights = [0.4, 0.6]
+    ci_values = analyzer.calculate_competitiveness_index(sample_features, weights)
+    
+    assert len(ci_values) == len(sample_features)
+    assert all(0 <= ci <= 1 for ci in ci_values)
+        \end{lstlisting}
+    \end{itemize}
+
+    \item Тестирование обработки некорректных данных (класс FeatureExtractor):
+    \begin{itemize}
+        \item Входные данные:
+        \begin{lstlisting}[language=Python]
+sample_data = [
+    {"description": "An epic <b>RPG</b> with dragons!", "price": 59.99, "metacritic": 85, "median_forever": 120},
+    {"description": "<p>Fast-paced action shooter.</p>", "price": 19.99, "metacritic": 70, "median_forever": 50}
+]
+        \end{lstlisting}
+        \item Ожидаемый результат после предобработки:
+        \begin{lstlisting}[language=Python]
+expected_output = [
+    {"description": "an epic rpg with dragons", "price": 0.75, "metacritic": 0.85, "median_forever": 0.6},
+    {"description": "fast-paced action shooter", "price": 0.25, "metacritic": 0.7, "median_forever": 0.25}
+]
+        \end{lstlisting}
+        \item Тестовый сценарий:
+        \begin{lstlisting}[language=Python]
+def test_data_preprocessing():
+    processed_data = preprocess_data(sample_data)
+    assert processed_data == expected_output
+        \end{lstlisting}
+    \end{itemize}
+
+    \item Тестирование алгоритмов кластеризации (класс GameClusterer):
+    \begin{itemize}
+        \item Входные данные:
+        \begin{lstlisting}[language=Python]
+sample_features = [
+    [0.2, 0.8],
+    [0.25, 0.75],
+    [0.7, 0.3],
+    [0.72, 0.28],
+    [0.8, 0.2]
+]
+        \end{lstlisting}
+        \item Ожидаемый результат кластеризации (для 2 кластеров):
+        \begin{lstlisting}[language=Python]
+Cluster 1: {[0.2, 0.8], [0.25, 0.75]}
+Cluster 2: {[0.7, 0.3], [0.72, 0.28], [0.8, 0.2]}
+        \end{lstlisting}
+        \item Тестовый сценарий:
+        \begin{lstlisting}[language=Python]
+def test_clustering_algorithm():
+    clusters = perform_clustering(sample_features, n_clusters=2)
+    assert len(clusters[0]) == 2
+    assert len(clusters[1]) == 3
+        \end{lstlisting}
+    \end{itemize}
+
+    \item Тестирование расчета индекса конкурентоспособности:
+    \begin{itemize}
+        \item Входные данные:
+        \begin{lstlisting}[language=Python]
+sample_games = [
+    {
+        "name": "Game1",
+        "price": 0.5,
+        "metacritic": 0.8,
+        "median_forever": 0.7,
+        "features": [0.5, 0.8, 0.7]
+    },
+    {
+        "name": "Game2",
+        "price": 0.6,
+        "metacritic": 0.9,
+        "median_forever": 0.75,
+        "features": [0.6, 0.9, 0.75]
+    }
+]
+        \end{lstlisting}
+        \item Ожидаемый индекс конкурентоспособности (при весах 0.4, 0.3, 0.3):
+        \begin{itemize}
+            \item Game 1: $CI=0.5\cdot0.4+0.8\cdot0.3+0.7\cdot0.3=0.65$
+            \item Game 2: $CI=0.6\cdot0.4+0.9\cdot0.3+0.75\cdot0.3=0.73$
+        \end{itemize}
+        \item Тестовый сценарий:
+        \begin{lstlisting}[language=Python]
+def test_competitiveness_index():
+    weights = [0.4, 0.3, 0.3]
+    ci_values = calculate_competitiveness_index(sample_games, weights)
+    assert round(ci_values[0], 2) == 0.65
+    assert round(ci_values[1], 2) == 0.73
+        \end{lstlisting}
+    \end{itemize}
+
+    \item Тестирование уникальных особенностей игр:
+    \begin{itemize}
+        \item Входные данные:
+        \begin{lstlisting}[language=Python]
+sample_user_game = {
+    "data": {
+        "categories": [
+            {"description": "Single-player"},
+            {"description": "Multi-player"}
+        ],
+        "genres": ["RPG", "Action", "Adventure"],
+        "name": "Test Game",
+        "detailed_description": "An epic RPG with dragons and unique combat system!",
+        "metacritic": {"score": 85},
+        "median_forever": 120
+    }
+}
+        \end{lstlisting}
+        \item Тестовый сценарий:
+        \begin{lstlisting}[language=Python]
+def test_unique_features_analysis():
+    comparison = analyzer.compare_with_most_similar_and_dissimilar(
+        sample_user_game, sample_similar_games)
+    
+    assert isinstance(comparison, dict)
+    assert 'size' in comparison
+    assert 'features' in comparison
+    assert comparison['size'] > 0
+    
+    features = comparison['features']
+    assert isinstance(features, dict)
+    for game_id, feature_data in features.items():
+        assert 'description_similarity' in feature_data
+        assert 'genre_similarity' in feature_data
+        assert 'category_similarity' in feature_data
+        assert 'overall_similarity' in feature_data
+        \end{lstlisting}
+    \end{itemize}
+
+    \item Тестирование конвейера анализа игр:
+    \begin{itemize}
+        \item Входные данные:
+        \begin{lstlisting}[language=Python]
+sample_game = {
+    "name": "Test Game",
+    "description": "An epic RPG with dragons!",
+    "price": 59.99,
+    "metacritic": 85,
+    "median_forever": 120,
+    "genres": ["RPG", "Action", "Adventure"],
+    "categories": ["Single-player", "Multi-player"],
+    "tags": ["RPG", "Action", "Fantasy"]
+}
+        \end{lstlisting}
+        \item Тестовый сценарий:
+        \begin{lstlisting}[language=Python]
+def test_game_analysis_pipeline():
+    results = pipeline.analyze_game(sample_game)
+    
+    assert isinstance(results, dict)
+    assert 'cluster_analysis' in results
+    assert 'competitiveness_analysis' in results
+    assert 'similarity_analysis' in results
+    assert 'unique_features' in results
+    
+    # Проверка согласованности результатов
+    results2 = pipeline.analyze_game(sample_game)
+    assert results == results2
+        \end{lstlisting}
+    \end{itemize}
+
+    \item Тестирование обработки пустых данных:
+    \begin{itemize}
+        \item Входные данные:
+        \begin{lstlisting}[language=Python]
+empty_game = {
+    "name": "",
+    "description": "",
+    \item Тестовый сценарий:
+    \begin{lstlisting}[language=Python]
+def test_empty_data_handling():
+    results = pipeline.analyze_game(empty_game)
+    assert isinstance(results, dict)
+    assert all(key in results for key in [
+        'cluster_analysis',
+        'competitiveness_analysis',
+        'similarity_analysis',
+        'unique_features'
+    ])
+        \end{lstlisting}
+    \end{itemize}
+
+    \item Тестирование анализатора рекомендаций игр:
+    \begin{itemize}
+        \item Входные данные:
+        \begin{lstlisting}[language=Python]
+sample_user_game = {
+    "name": "Test Game",
+    "description": "An epic RPG with dragons!",
+    "price": 59.99,
+    "metacritic": 85,
+    "median_forever": 120,
+    "genres": ["RPG", "Action", "Adventure"],
+    "categories": ["Single-player", "Multi-player"],
+    "tags": ["RPG", "Action", "Fantasy"]
+}
+
+sample_similar_data = {
+    "all_genres": ["RPG", "Action", "Strategy"],
+    "all_tags": ["RPG", "Action", "Fantasy", "Open World"],
+    "all_categories": ["Single-player", "Multi-player", "Co-op"],
+    "unique_in_target_genres": ["Adventure"],
+    "unique_in_target_tags": ["Dragons"],
+    "description_analysis": {
+        "similarity_score": 0.75,
+        "common_phrases": ["epic adventure", "fantasy world"],
+        "unique_phrases": ["dragon companions", "magic system"]
+    }
+}
+        \end{lstlisting}
+        \item Тестовый сценарий:
+        \begin{lstlisting}[language=Python]
+def test_recommendation_analysis():
+    recommendations = analyzer.generate_recommendations(
+        sample_user_game, 
+        sample_similar_data, 
+        sample_dissimilar_data
+    )
+    
+    assert isinstance(recommendations, list)
+    assert len(recommendations) > 0
+    
+    # Проверка наличия всех разделов рекомендаций
+    sections = [
+        "Позиционирование на рынке",
+        "Уникальные особенности",
+        "Ценовое позиционирование",
+        "Конкурентные преимущества",
+        "Рекомендации по описанию",
+        "Потенциальные улучшения"
+    ]
+    
+    for section in sections:
+        assert any(section in rec for rec in recommendations)
+        \end{lstlisting}
+    \end{itemize}
+
+    \item Тестирование анализа ценового позиционирования:
+    \begin{itemize}
+        \item Входные данные:
+        \begin{lstlisting}[language=Python]
+# Тест с низкой ценой
+sample_user_game["price"] = 29.99
+result_low = analyzer._analyze_price_positioning(
+    sample_user_game, 
+    sample_similar_data, 
+    sample_dissimilar_data
+)
+
+# Тест с высокой ценой
+sample_user_game["price"] = 89.99
+result_high = analyzer._analyze_price_positioning(
+    sample_user_game, 
+    sample_similar_data, 
+    sample_dissimilar_data
+)
+        \end{lstlisting}
+        \item Тестовый сценарий:
+        \begin{lstlisting}[language=Python]
+def test_price_positioning():
+    assert "ниже среднерыночной" in result_low
+    assert "выше среднерыночной" in result_high
+    assert isinstance(result_low, str)
+    assert isinstance(result_high, str)
+        \end{lstlisting}
+    \end{itemize}
+
+    \item Тестирование анализа уникальных особенностей:
+    \begin{itemize}
+        \item Входные данные:
+        \begin{lstlisting}[language=Python]
+sample_user_game["genres"] = ["RPG", "Strategy", "Simulation"]
+sample_user_game["tags"] = ["UniqueTag1", "UniqueTag2"]
+        \end{lstlisting}
+        \item Тестовый сценарий:
+        \begin{lstlisting}[language=Python]
+def test_unique_features():
+    combinations = analyzer._analyze_feature_combinations(
+        sample_user_game, 
+        sample_similar_data
+    )
+    advantages = analyzer._analyze_competitive_advantages(
+        sample_user_game, 
+        sample_similar_data, 
+        sample_dissimilar_data
+    )
+    
+    assert isinstance(combinations, list)
+    assert isinstance(advantages, list)
+    assert any("Уникальная комбинация жанров" in comb for comb in combinations)
+    assert any("Уникальные теги" in adv for adv in advantages)
+        \end{lstlisting}
+    \end{itemize}
+
+    \item Тестирование анализа описания:
+    \begin{itemize}
+        \item Входные данные:
+        \begin{lstlisting}[language=Python]
+# Тест с высокой схожестью
+sample_similar_data["description_analysis"]["similarity_score"] = 0.9
+result_high_sim = analyzer._analyze_description(
+    sample_user_game, 
+    sample_similar_data, 
+    sample_dissimilar_data
+)
+
+# Тест с низкой схожестью
+sample_similar_data["description_analysis"]["similarity_score"] = 0.2
+result_low_sim = analyzer._analyze_description(
+    sample_user_game, 
+    sample_similar_data, 
+    sample_dissimilar_data
+)
+        \end{lstlisting}
+        \item Тестовый сценарий:
+        \begin{lstlisting}[language=Python]
+def test_description_analysis():
+    assert isinstance(result_high_sim, list)
+    assert isinstance(result_low_sim, list)
+    assert any("очень похоже" in rec for rec in result_high_sim)
+    assert any("значительно отличается" in rec for rec in result_low_sim)
+        \end{lstlisting}
+    \end{itemize}
+
+    \item Тестирование обработки пустых данных:
+    \begin{itemize}
+        \item Входные данные:
+        \begin{lstlisting}[language=Python]
+empty_game = {
+    "name": "",
+    "description": "",
+    "price": 0,
+    "metacritic": 0,
+    "median_forever": 0,
+    "genres": [],
+    "categories": [],
+    "tags": []
+}
+
+empty_similar_data = {
+    "all_genres": [],
+    "all_tags": [],
+    "all_categories": [],
+    "unique_in_target_genres": [],
+    "unique_in_target_tags": [],
+    "unique_in_target_categories": [],
+    "intersection_genres": [],
+    "intersection_tags": [],
+    "intersection_categories": [],
+    "avg_price_diff": 0,
+    "description_analysis": {
+        "similarity_score": 0,
+        "common_phrases": [],
+        "unique_phrases": []
+    }
+}
+        \end{lstlisting}
+        \item Тестовый сценарий:
+        \begin{lstlisting}[language=Python]
+def test_empty_data_handling():
+    recommendations = analyzer.generate_recommendations(
+        empty_game, 
+        empty_similar_data, 
+        empty_dissimilar_data
+    )
+    
+    assert isinstance(recommendations, list)
+    assert len(recommendations) > 0
+    assert "общую рекомендацию" in recommendations[-1]
+        \end{lstlisting}
+    \end{itemize}
+\end{enumerate}
+
+\section{Заключение}
+Общее покрытие кода тестами составляет 77\%, что является хорошим показателем для системы такого масштаба. Особенно важно отметить высокое покрытие тестами ключевых аналитических модулей, что обеспечивает надежность и стабильность работы системы.
+
+\end{document} 

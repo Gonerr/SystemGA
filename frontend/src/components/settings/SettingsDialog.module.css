@@ -1,0 +1,84 @@
+.criteriaList {
+  margin-top: 16px;
+  padding: 8px;
+  background-color: var(--background-secondary);
+  border-radius: 8px;
+  min-height: 200px;
+}
+
+.criterionItem {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  margin-bottom: 8px;
+  background-color: var(--background-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.criterionItem:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dragging {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: var(--background-hover);
+}
+
+.dragHandle {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  cursor: grab;
+  color: var(--text-secondary);
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.criterionContent {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 12px;
+}
+
+.criterionText {
+  flex: 1;
+  min-width: 0;
+  margin-right: 16px;
+}
+
+.switch {
+  margin: 0;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  gap: 16px;
+}
+
+.errorAlert {
+  margin-bottom: 16px;
+}
+
+/* Стили для темной темы */
+:global(.dark-theme) .criterionItem {
+  background: var(--bg-card);
+}
+
+:global(.dark-theme) .criterionItem:hover {
+  background: var(--bg-hover);
+}
+
+:global(.dark-theme) .criterionItem.dragging {
+  background: var(--bg-hover);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+} 

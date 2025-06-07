@@ -1,0 +1,125 @@
+.container {
+  min-height: 100vh;
+  width: 100%;
+  background: var(--bg-primary);
+  max-width: none;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 3rem;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.title {
+  margin-top: 0;
+  padding-top: 2em;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, var(--dl-accent-color), #6ab7ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.topButtons {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 1000;
+}
+
+.themeToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.themeToggle:hover {
+  background: var(--bg-hover);
+}
+
+.themeToggle svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+.settingsButton {
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  padding: 8px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+}
+
+.settingsButton:hover {
+  color: var(--dl-accent-color);
+  background: var(--bg-hover);
+  transform: rotate(30deg);
+}
+
+.paper {
+  padding: 2rem;
+  margin-bottom: 2rem;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: None;
+}
+
+.content {
+  margin-top: 2rem;
+}
+
+.alert {
+  margin-bottom: 2rem;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.downloadButton {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
+  padding: 0 1rem;
+}
+
+.downloadButton button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  text-transform: none;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.downloadButton button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.downloadButton svg {
+  margin-right: 0.5rem;
+} 
