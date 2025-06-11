@@ -34,6 +34,43 @@
 
 # if __name__ == "__main__":
 #     main() 
+# print(pipeline.user_game)
+
+# pipeline = GameAnalysisPipeline()
+# print(pipeline.rate_top_games(pipeline.user_game))
+# pipeline = GameAnalysisPipeline(user_game_id=570)
+
+# test_game = {
+#     "game_id": 0,
+#     "name": 'Sims 5',
+#     "description": "Immerse yourself in the exciting world of DreamLife: Virtual World,"
+#                 " where you become the architect of your own reality! Create unique characters, "
+#                 "build your dream homes and manage their lives in a virtual world full of possibilities."
+#                 " In DreamLife you can: Create characters: Customize the appearance, personality "
+#                 "and goals of your characters. Each will have their own unique traits, "
+#                 "preferences and ambitions. Build and furnish homes: From cozy cottages to luxurious "
+#                 "villas, live out your architectural fantasies. Choose furniture, "
+#                 "decor and layout to make your home perfect. Manage Life: Help your characters "
+#                 "build careers, make friends, fall in love, start families and achieve their"
+#                 " goals. Every decision affects their destiny! Explore the open world: Visit parks, "
+#                 "cafes, stores and other locations where your characters can interact with other"
+#                 " city dwellers. Create and experiment: Create unique scenarios, "
+#                 "from quiet family life to exciting adventures. DreamLife: Virtual World "
+#                 "is not just a game, it's your own world where you can realize any ideas and "
+#                 "dreams you have. Start your story today!",
+#     "genres": ["Action","Simulator"],
+#     "tags": ["Building","Action"],
+#     "price": 15,
+#     "categories": ["Single-player"],
+#     "median_forever": 3400
+# }
+
+# results = pipeline.analyze_game(pipeline.user_game)
+# print(results)
+# print(f'Конкурентная способность игры {pipeline.user_game["name"]} = {results["competitiveness_score"]}')
+# print('\nРекомендации по игре:')
+# for recommendation in results["recommendations"]:
+#     print(f"- {recommendation}")
 
 import importlib
 import time

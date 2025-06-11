@@ -147,7 +147,7 @@ const SettingsDialog = ({ open, onClose, onSave, initialSettings }) => {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>Настройки критериев конкурентоспособности</DialogTitle>
+      <DialogTitle>Настройки критериев оценки</DialogTitle>
       <DialogContent>
         {error && (
           <Alert severity="error" className={styles.errorAlert}>

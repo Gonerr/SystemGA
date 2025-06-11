@@ -13,13 +13,13 @@ class GameSimilarityAnalyzer:
 
         # Веса для различных характеристик
         self.quant_weights = {
-            "description": 8,
-            "genres": 6,
-            "tags": 6,
-            "categories": 4,
-            "numeric": 4
+            "description": 5,
+            "genres": 9,
+            "tags": 8,
+            "categories": 7,
+            "numeric": 5
         }
-        self.WEIGHTS = self._calculate_ahp_weights(self.quant_weights)
+        self.WEIGHTS = self._calculate_weights(self.quant_weights)
 
     def get_games_features(self, user_game_data, games_ids):
         '''Получение векторизованных и нормализованных данных об играх'''
@@ -224,9 +224,9 @@ class GameSimilarityAnalyzer:
             print(f"Ошибка при поиске похожих игр: {str(e)}")
             return {}
 
-    def _calculate_ahp_weights(self, quant_weights: dict) -> dict:
+    def _calculate_weights(self, quant_weights: dict) -> dict:
         """
-        Рассчитывает веса методом анализа иерархий (AHP) с лог-чебышевской аппроксимацией.
+        Рассчитывает веса 
         quant_weights: dict {ключ: вес}
         Возвращает dict {ключ: нормированный вес}
         """

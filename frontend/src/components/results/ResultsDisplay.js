@@ -10,16 +10,38 @@ const ResultsDisplay = ({ results }) => {
     let currentSection = null;
   
     recommendations.forEach(line => {
-      if (line.includes(':')) {
+      if (line.includes(':') && !line.includes('(') && !line.includes(')')) {
         // Новая секция
         if (currentSection) sections.push(currentSection);
         currentSection = {
           title: line.replace(/^[-•\s]+/, '').trim(),
-          items: []
+          items: [],
+          type: 'general'
         };
+        if (currentSection.title === 'Уникальные особенности') {
+          currentSection.type = 'uniqueFeatures';
+          currentSection.genres = [];
+          currentSection.tags = [];
+          currentSection.categories = [];
+        }
       } else if (currentSection) {
-        // Подпункт секции
-        currentSection.items.push(line.replace(/^[-•\s]+/, '').trim());
+        if (currentSection.type === 'uniqueFeatures') {
+          const genreMatch = line.match(/Игра имеет уникальный жанр '(.*?)' \(важность: (\d\.\d)\)/);
+          const tagMatch = line.match(/Игра имеет уникальный тег '(.*?)' \(важность: (\d\.\d)\)/);
+          const categoryMatch = line.match(/Игра имеет уникальная категория '(.*?)' \(важность: (\d\.\d)\)/);
+
+          if (genreMatch) {
+            currentSection.genres.push({ name: genreMatch[1], importance: parseFloat(genreMatch[2]) });
+          } else if (tagMatch) {
+            currentSection.tags.push({ name: tagMatch[1], importance: parseFloat(tagMatch[2]) });
+          } else if (categoryMatch) {
+            currentSection.categories.push({ name: categoryMatch[1], importance: parseFloat(categoryMatch[2]) });
+          } else {
+            currentSection.items.push(line.replace(/^[-•\s]+/, '').trim());
+          }
+        } else {
+          currentSection.items.push(line.replace(/^[-•\s]+/, '').trim());
+        }
       }
     });
     if (currentSection) sections.push(currentSection);
@@ -53,7 +75,7 @@ const ResultsDisplay = ({ results }) => {
 
     return (
       <div className={`${styles.section} ${scoreClass}`}>
-        <h2>Оценка конкурентоспособности</h2>
+        <h2>Оценка коммерческого потенциала</h2>
         <div className={styles.competitivenessScore}>
           <div className={styles.scoreValue}>
             <span>{(score * 100).toFixed(2)}%</span>
@@ -65,9 +87,9 @@ const ResultsDisplay = ({ results }) => {
             />
           </div>
           <p className={styles.scoreDescription}>
-            {score >= 0.7 ? 'Высокая конкурентоспособность' :
-             score >= 0.4 ? 'Средняя конкурентоспособность' :
-             'Низкая конкурентоспособность'}
+            {score >= 0.7 ? 'Высокий коммерческий потенциал' :
+             score >= 0.4 ? 'Средний коммерческий потенциал' :
+             'Низкий коммерческий потенциал'}
           </p>
         </div>
       </div>
@@ -130,10 +152,10 @@ const ResultsDisplay = ({ results }) => {
               <div key={game.Game_ID} className={styles.gameCard}>
                 <h3>{game.Name || 'Без названия'}</h3>
                 <div className={styles.gameDetails}>
-                <p>Конкурентоспособность: {(competitivenessScore * 100).toFixed(2)}%</p>
+                <p>Коммерческий потенциал: {(competitivenessScore * 100).toFixed(2)}%</p>
                   <p>Схожесть: {(game.Similarity_score * 100).toFixed(2)}%</p>
                   <p>Жанры: {(game.Genres || []).join(', ') || 'Нет данных'}</p>
-                  <p>Стоимость: ${game.Price || 0}</p>
+                  <p>Стоимость: {game.Price || 0} руб.</p>
                   <p>Метакритик: {game.Metacritic || 0}</p>
                   <p>Среднее время: {game["Median Forever"] || 0} ч</p>
                   <div className={styles.scoreIndicator}>
@@ -166,14 +188,84 @@ const ResultsDisplay = ({ results }) => {
         <div className={styles.recommendations}>
           {grouped.map((section, idx) => (
             <div key={idx} className={styles.recommendationSection}>
-              <div className={styles.recommendationTitle}>{section.title}</div>
-              <ul className={styles.recommendationList}>
-                {section.items.map((item, i) => (
-                  <li key={i} className={styles.recommendationParagraph}>
-                    {item}
-                  </li>
-                ))}
-              </ul>
+              <div 
+                className={styles.recommendationHeader}
+                onClick={() => toggleSection(section.title)}
+                aria-expanded={expandedSections[section.title]}
+              >
+                <div className={styles.recommendationTitle}>
+                  {section.title}
+                  {section.type === 'uniqueFeatures' && (
+                    <svg className={styles.arrowIcon} viewBox="0 0 24 24">
+                      <path d="M7 10l5 5 5-5z"/>
+                    </svg>
+                  )}
+                </div>
+              </div>
+              <div 
+                className={`${styles.recommendationContent} ${
+                  expandedSections[section.title] || section.type !== 'uniqueFeatures' ? styles.expanded : ''
+                }`}
+                aria-hidden={!expandedSections[section.title] && section.type === 'uniqueFeatures'}
+              >
+                {section.type === 'uniqueFeatures' ? (
+                  <div className={styles.uniqueFeaturesContainer}>
+                    {section.genres.length > 0 && (
+                      <div className={styles.featureGroup}>
+                        <h3>Уникальные жанры:</h3>
+                        <div className={styles.featureList}>
+                          {section.genres.map((feature, i) => (
+                            <span key={i} className={styles.featureItem}>
+                              {feature.name} <span className={styles.importance}>(Важность: {feature.importance})</span>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {section.tags.length > 0 && (
+                      <div className={styles.featureGroup}>
+                        <h3>Уникальные теги:</h3>
+                        <div className={styles.featureList}>
+                          {section.tags.map((feature, i) => (
+                            <span key={i} className={styles.featureItem}>
+                              {feature.name} <span className={styles.importance}>(Важность: {feature.importance})</span>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {section.categories.length > 0 && (
+                      <div className={styles.featureGroup}>
+                        <h3>Уникальные категории:</h3>
+                        <div className={styles.featureList}>
+                          {section.categories.map((feature, i) => (
+                            <span key={i} className={styles.featureItem}>
+                              {feature.name} <span className={styles.importance}>(Важность: {feature.importance})</span>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {section.items.length > 0 && (
+                      <ul className={styles.recommendationList}>
+                        {section.items.map((item, i) => (
+                          <li key={i} className={styles.recommendationParagraph}>
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ) : (
+                  <ul className={styles.recommendationList}>
+                    {section.items.map((item, i) => (
+                      <li key={i} className={styles.recommendationParagraph}>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           ))}
         </div>

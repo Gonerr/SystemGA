@@ -114,17 +114,9 @@ class CompetitivenessRanker:
                 logger.error(f"Error processing game {game.get('game_id', 'unknown')}: {str(e)}", exc_info=True)
                 continue
 
-        # Применяем принцип Парето
         self._apply_pareto(variants)
-        print('Парето ок')
-
-        # Применяем качественную важность
         self._apply_quality_importance(variants)
-        print('качественная важность ок')
-
-        # Применяем количественную важность
         self._apply_quantitative_importance(variants)
-        print('количественную важность ок')
 
         print(variants)
         print(self.importance_coefs)
@@ -151,7 +143,6 @@ class CompetitivenessRanker:
             final_scores.append((variant.name, score*100))
             logger.debug(f"Game {variant.name} final score: {score}")
 
-        # Сортируем по убыванию оценки
         return sorted(final_scores, key=lambda x: x[1], reverse=True)
 
     def _apply_pareto(self, variants: List[GameVariant]):
@@ -266,7 +257,6 @@ class CompetitivenessRanker:
                         other.linkedTo.add(variant.name)
         except Exception as e:
             logger.error(f"Error in _apply_quantitative_importance: {str(e)}", exc_info=True)
-            # В случае ошибки просто пропускаем этот шаг
             pass 
 
     def _calculate_importance_coefs_pairwise_logchebyshev(self, quant_weights: dict) -> List[float]:

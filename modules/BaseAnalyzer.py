@@ -75,7 +75,7 @@ class BaseAnalyzer:
             self.repository.update_encoding_schema()
             self.schema = self.repository.get_encoding_schema() 
         else:
-            print(f'Игр в схеме = {self.schema['count']}')
+            print('Игр в схеме = ', self.schema["count"])
             print(f'Игр в базе данных = {num_all_games}')
 
 
@@ -132,14 +132,12 @@ class BaseAnalyzer:
 
         genre_binaries = genre_binarizer.fit_transform(genres_list).tolist()
 
-        # Prepare text data for hashing vectorizer
         category_texts = [" ".join(categories) for categories in categories_list]
         tag_texts = [" ".join(tags) for tags in tags_list]
 
         category_matrices = self.hashing_vectorizer.transform(category_texts).toarray().tolist()
         tag_matrices = self.hashing_vectorizer.transform(tag_texts).toarray().tolist()
 
-        # Normalize scalar features
         max_price = schema.get("max_price", 1) if schema.get("max_price", 1) > 0 else 1
         max_metacritic = schema.get("max_metacritic", 1) if schema.get("max_metacritic", 1) > 0 else 1
         max_median_forever = schema.get("max_median_forever", 1) if schema.get("max_median_forever", 1) > 0 else 1
@@ -148,7 +146,6 @@ class BaseAnalyzer:
         normalized_metacritics = [metacritic / max_metacritic for metacritic in metacritics]
         normalized_median_forevers = [median / max_median_forever for median in median_forevers]
 
-        # Combine all features for each game
         game_features_list = []
         for i in range(num_games):
             game_features = {
@@ -303,7 +300,6 @@ class BaseAnalyzer:
             pd.DataFrame: Таблица с информацией о играх в кластере
         """
         try:
-            # Извлекаем все игры в данном кластере
             games_in_cluster = self.get_games_in_cluster(cluster_id)
             if not games_in_cluster:
                 print(f"Кластер {cluster_id} не содержит игр.")
@@ -315,14 +311,12 @@ class BaseAnalyzer:
                 game_id = game['game_id']
                 coordinates = game.get('coordinates', [])
 
-                # Получаем данные из steam_data_collection
                 steam_data = self.repository.get_data_from_steam(game_id)
                 steamspy_data = self.repository.get_data_from_steamspy(game_id)
                 if not steam_data:
                     continue
                 features = self.extractor.create_game_features(steam_data,steamspy_data)
 
-                # Формируем строку данных
                 game_data.append({
                     "Game ID": game_id,
                     "Name": features["name"],
@@ -334,7 +328,6 @@ class BaseAnalyzer:
                     "Median Forever": features["median_forever"]
                 })
 
-            # Преобразуем в DataFrame
             df = pd.DataFrame(game_data)
             return df
 
@@ -384,7 +377,6 @@ class BaseAnalyzer:
                 print("Словарь similarity_scores пуст.")
                 return pd.DataFrame()
 
-            # Сортируем игры по убыванию схожести и берем топ-N
             sorted_scores = sorted(similarity_scores.items(), key=lambda x: x[1], reverse=True)[:top_n]
 
             game_data = []
@@ -408,7 +400,6 @@ class BaseAnalyzer:
                     "Median Forever": features["median_forever"]
                 })
 
-            # Преобразуем в DataFrame
             df = pd.DataFrame(game_data)
             return df
 

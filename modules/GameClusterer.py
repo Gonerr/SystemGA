@@ -43,7 +43,6 @@ class GameClusterer:
         game_ids = []
         game_names = []
 
-        # Создаем отдельные списки для каждого типа признаков
         category_features = []
         description_features = []
         genre_features = []
@@ -56,7 +55,7 @@ class GameClusterer:
             print(game)
             if game.get('category_binary') is None:
                 continue
-            # Собираем признаки по типам
+
             category_features.append(np.array(game['category_binary']).flatten())
             description_features.append(np.array(game['description_embedding']).flatten())
             genre_features.append(np.array(game['genre_binary']).flatten())
@@ -67,18 +66,15 @@ class GameClusterer:
                 game['median_forever']
             ]))
 
-        # Преобразуем в numpy массивы
         category_features = np.array(category_features)
         description_features = np.array(description_features)
         genre_features = np.array(genre_features)
         tag_features = np.array(tag_features)
         numerical_features = np.array(numerical_features)
 
-        # Нормализуем числовые признаки
         numerical_scaler = StandardScaler()
         numerical_features = numerical_scaler.fit_transform(numerical_features)
 
-        # Применяем PCA к эмбеддингам описания для уменьшения размерности
         n_samples, n_features = description_features.shape
         n_components = min(50, n_samples, n_features)
         pca = PCA(n_components=n_components)
@@ -86,7 +82,6 @@ class GameClusterer:
         
         dump(pca, 'pca_description.joblib')
 
-        # Нормализуем остальные признаки
         category_scaler = StandardScaler()
         genre_scaler = StandardScaler()
         tag_scaler = StandardScaler()
@@ -95,16 +90,14 @@ class GameClusterer:
         genre_features = genre_scaler.fit_transform(genre_features)
         tag_features = tag_scaler.fit_transform(tag_features)
 
-        # Задаем веса для разных типов признаков
         weights = {
-            'category': 0.2,
-            'description': 0.4,  # Больший вес для эмбеддингов описания
-            'genre': 0.2,
-            'tag': 0.1,
-            'numerical': 0.1
+            'category': 4,
+            'description': 8,
+            'genre': 4,
+            'tag': 3,
+            'numerical': 3
         }
-
-        # Объединяем признаки с весами
+        weights = self._calculate_weights(weights)
         features_matrix = np.hstack([
             category_features * weights['category'],
             description_features * weights['description'],
@@ -128,7 +121,6 @@ class GameClusterer:
             return list(response.json().keys())[:num_games]
         else:
             return None
-        
 
     def clusters(self):
         features_matrix, game_ids, game_names = self.get_features_matrix()
@@ -141,11 +133,10 @@ class GameClusterer:
         labels = kmeans.fit_predict(features_matrix)
 
         # Визуализация
-        self.visualize_clusters_tsne(features_matrix, labels, game_ids, game_names, label_frequency=5)
+        #self.visualize_clusters_tsne(features_matrix, labels, game_ids, game_names, label_frequency=5)
 
     def visualize_clusters_tsne(self, feature_matrix, labels, game_ids, names=None, sample_size=1000, label_frequency=10):
         """Функция для визуализации кластеров с помощью t-SNE с подписями точек"""
-        # Берем подвыборку, если данных много
         if len(feature_matrix) > sample_size:
             rng = np.random.RandomState(42)
             indices = rng.choice(len(feature_matrix), sample_size, replace=False)
@@ -159,7 +150,7 @@ class GameClusterer:
         tsne = TSNE(
             n_components=2,
             perplexity=perplexity,
-            learning_rate='auto',  # Автоматический подбор learning rate
+            learning_rate='auto',
             n_iter=1000,
             init='pca',  # Используем PCA для инициализации
             random_state=42
@@ -182,7 +173,7 @@ class GameClusterer:
             palette=palette,
             legend='full',
             alpha=0.8,
-            s=100  # Увеличиваем размер точек
+            s=100
         )
 
         # Добавляем подписи для некоторых точек
@@ -271,7 +262,6 @@ class GameClusterer:
             int: Предсказанный кластер.
         """
         try:
-            # Загружаем все scaler'ы и PCA, использованные при обучении
             numerical_scaler = load('numerical_scaler.joblib')
             category_scaler = load('category_scaler.joblib')
             genre_scaler = load('genre_scaler.joblib')
@@ -282,40 +272,35 @@ class GameClusterer:
             return None
 
         try:
-            # Проверяем и преобразуем размерность description_embedding
             desc_embedding = np.array(vectorized_game_data.get("description_embedding", []))
             if len(desc_embedding) == 0:
                 print("Отсутствует description_embedding")
                 return None
 
-            # Если размерность не совпадает, используем PCA для преобразования
             if desc_embedding.shape[0] != pca.n_features_in_:
                 desc_embedding = pca.transform([desc_embedding])[0]
             else:
                 desc_embedding = pca.transform([desc_embedding])[0]
 
-            # Преобразуем числовые признаки
             numerical_features = numerical_scaler.transform([[
                 float(vectorized_game_data.get("price", 0) or 0),
                 float(vectorized_game_data.get("median_forever", 0) or 0),
                 float(vectorized_game_data.get("metacritic", 0) or 0)
             ]])[0]
 
-            # Преобразуем категории и жанры
             category_vector = category_scaler.transform([vectorized_game_data.get("category_binary", [])])[0]
             genre_vector = genre_scaler.transform([vectorized_game_data.get("genre_binary", [])])[0]
             tag_vector = tag_scaler.transform([vectorized_game_data.get("tag_hash", [])])[0]
 
-            # Те же веса, что и при обучении
             weights = {
-                'category': 0.2,
-                'description': 0.4,
-                'genre': 0.2,
-                'tag': 0.1,
-                'numerical': 0.1
+                'category': 4,
+                'description': 8,
+                'genre': 4,
+                'tag': 3,
+                'numerical': 3
             }
+            weights = self._calculate_weights(weights)
 
-            # Формируем объединенный вектор признаков
             user_vector = np.hstack([
                 category_vector * weights['category'],
                 desc_embedding * weights['description'],
@@ -324,21 +309,18 @@ class GameClusterer:
                 numerical_features * weights['numerical']
             ]).reshape(1, -1)
 
-            # Загружаем t-SNE модель
             try:
                 tsne = load('tsne_model.joblib')
             except FileNotFoundError:
                 print("t-SNE модель не найдена. Сначала выполните кластеризацию.")
                 return None
 
-            # Загружаем исходные признаки
             try:
                 original_features = load('original_features.joblib')
             except FileNotFoundError:
                 print("Исходные признаки не найдены. Сначала выполните кластеризацию.")
                 return None
 
-            # Получаем данные о кластерах
             all_cluster_data = list(self.repository.game_cluster_collection.find({}))
             if not all_cluster_data:
                 print("Нет данных о кластерах в БД.")
@@ -363,14 +345,10 @@ class GameClusterer:
 
             # Используем KNN для предсказания
             from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
-
-            # Находим ближайших соседей в исходном пространстве
             nbrs = NearestNeighbors(n_neighbors=5).fit(original_features)
             _, indices = nbrs.kneighbors(user_vector)
-
             # Берем t-SNE координаты этих соседей и усредняем их
             predicted_coords = np.mean(X_tsne[indices[0]], axis=0)
-
             # Предсказываем кластер
             knn = KNeighborsClassifier(n_neighbors=5)
             knn.fit(X_tsne, cluster_labels)
@@ -391,12 +369,10 @@ class GameClusterer:
             int: Номер кластера
         """
         try:
-            # Векторизация пользовательской игры
             vectorized_data = self.extractor.vectorize_user_game(user_game, None)
             if vectorized_data is None:
                 print("Не удалось векторизовать пользовательскую игру.")
                 return None
-
             # Предсказание кластера
             cluster_id = self.predict_cluster(vectorized_data)
             if cluster_id is not None:
@@ -420,3 +396,18 @@ class GameClusterer:
         if np.linalg.norm(f1) == 0 or np.linalg.norm(f2) == 0:
             return 0.0
         return float(np.dot(f1, f2) / (np.linalg.norm(f1) * np.linalg.norm(f2)))
+
+    def _calculate_weights(self, quant_weights: dict) -> dict:
+        keys = list(quant_weights.keys())
+        n = len(keys)
+        weights = [max(quant_weights[k], 1e-6) for k in keys]
+        A = np.ones((n, n))
+        for i in range(n):
+            for j in range(n):
+                if i != j:
+                    A[i, j] = weights[i] / weights[j] if weights[j] > 0 else 1e6
+        logA = np.log(A)
+        log_means = np.mean(logA, axis=1)
+        raw_coefs = np.exp(log_means)
+        norm_coefs = raw_coefs / np.sum(raw_coefs)
+        return {k: w for k, w in zip(keys, norm_coefs)}

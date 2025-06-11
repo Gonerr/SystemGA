@@ -7,6 +7,7 @@ const GameIdForm = ({ onSubmit, loading }) => {
   const [games, setGames] = useState([]);
   const [selectedGame, setSelectedGame] = useState(null);
   const [error, setError] = useState(null);
+  const [displayLimit, setDisplayLimit] = useState(100);
 
   useEffect(() => {
     const fetchGames = async () => {
@@ -40,6 +41,14 @@ const GameIdForm = ({ onSubmit, loading }) => {
         value={selectedGame}
         onChange={(event, newValue) => {
           setSelectedGame(newValue);
+        }}
+        ListboxProps={{
+          onScroll: (event) => {
+            const listboxNode = event.currentTarget;
+            if (listboxNode.scrollTop + listboxNode.clientHeight === listboxNode.scrollHeight) {
+              setDisplayLimit(prevLimit => prevLimit + 100);
+            }
+          },
         }}
         renderInput={(params) => (
           <TextField

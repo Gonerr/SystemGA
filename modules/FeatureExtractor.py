@@ -13,7 +13,12 @@ from .DataRepository import DataRepository
 class FeatureExtractor:
     def __init__(self):
         self.schema = DataRepository().get_encoding_schema()
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')
+        # Try to load the model from a local path first
+        try:
+            self.model = SentenceTransformer('modules/models/all-MiniLM-L6-v2')
+        except Exception:
+            # Fallback to downloading if local load fails
+            self.model = SentenceTransformer('all-MiniLM-L6-v2')
         self.hashing_vectorizer = HashingVectorizer(n_features=256)
         self.genre_binarizer = MultiLabelBinarizer()
         self.category_binarizer = MultiLabelBinarizer()
@@ -56,7 +61,6 @@ class FeatureExtractor:
             if steamspy_data is None:
                 steamspy_data = {}
 
-            # Безопасное получение жанров
             genres = []
             if steamspy_data.get("genre"):
                 genres = [genre for genre in steamspy_data["genre"].split(', ') if genre]
@@ -74,14 +78,12 @@ class FeatureExtractor:
             
             is_vr = int("VR Supported" in categories_list)
             is_multiplayer = int("Multi-player" in categories_list or "Online PvP" in categories_list)
-            
-            # Безопасная обработка тегов
+
             tags_counter = Counter()
             tags = steamspy_data.get('tags', {})
             if isinstance(tags, dict):
                 tags_counter.update(tags.keys())
-            
-            # Безопасная обработка владельцев
+
             owners_raw = steamspy_data.get("owners", "0-0")
             owners_split = [o for o in owners_raw.split('..') if o.strip()]
             if owners_split:
@@ -92,7 +94,6 @@ class FeatureExtractor:
             else:
                 owners_midpoint = 0
 
-            # Безопасная обработка отзывов
             pos = steamspy_data.get("positive", 0)
             neg = steamspy_data.get("negative", 0)
             pos = 0 if pos is None else int(pos)
@@ -101,7 +102,6 @@ class FeatureExtractor:
             
             release_date = steam_data.get('data', {}).get('release_date', {}).get('date', '')
 
-            # Безопасная обработка числовых значений
             try:
                 price = float(steamspy_data.get("price", 0) or 0)
             except (ValueError, TypeError):
@@ -147,22 +147,18 @@ class FeatureExtractor:
         :param games_features: Словарь, где ключи — ID игр, а значения — словари с данными об играх.
         :return: Матрицы для описания, жанров и тегов.
         """
-        # Векторизуем описания
         descriptions = [features.get("description", "") for features in games_features.values()]
         model = SentenceTransformer('all-MiniLM-L6-v2')
         description_embeddings = model.encode(descriptions)
 
-        # Векторизуем жанры
         genres = [features.get("genres", []) for features in games_features.values()]
         genre_vectorizer = MultiLabelBinarizer()
         genre_matrix = genre_vectorizer.fit_transform(genres)
 
-        # Векторизуем категории
         categories = [features.get("categories", []) for features in games_features.values()]
         category_vectorizer = MultiLabelBinarizer()
         category_matrix = category_vectorizer.fit_transform(categories)
 
-        # Векторизуем теги
         all_tags = set()
         for features in games_features.values():
             tags = features.get("tags", [])
@@ -219,13 +215,11 @@ class FeatureExtractor:
             if not schema:
                 schema = self.schema
 
-            # Проверяем наличие необходимых полей
             required_fields = ['name', 'description', 'genres', 'categories', 'tags']
             if not all(field in user_game for field in required_fields):
                 print(f"Отсутствуют обязательные поля в данных игры: {required_fields}")
                 return None
 
-            # Безопасное получение значений с дефолтными значениями
             name = user_game.get('name', '')
             description = user_game.get('description', '')
             genres = user_game.get('genres', [])
@@ -235,7 +229,6 @@ class FeatureExtractor:
             median_forever = float(user_game.get('median_forever', 0) or 0)
             metacritic = float(user_game.get('metacritic', 0) or 0)
 
-            # Векторизация данных
             try:
                 genre_binarizer = MultiLabelBinarizer(classes=schema["genres"])
                 description_embedding = self.model.encode(description).tolist()

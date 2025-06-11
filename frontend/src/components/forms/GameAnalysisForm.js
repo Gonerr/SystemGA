@@ -86,7 +86,7 @@ const GameAnalysisForm = ({ onSubmit, loading }) => {
               fullWidth
               multiline
               rows={4}
-              label="Описание игры (на английском)"
+              label="Описание игры"
               value={gameData.description}
               onChange={(e) => handleGameDataChange('description', e.target.value)}
               required
@@ -155,7 +155,7 @@ const GameAnalysisForm = ({ onSubmit, loading }) => {
             <TextField
               fullWidth
               type="number"
-              label="Стоимость (в долларах)"
+              label="Стоимость (в рублях)"
               value={gameData.price}
               onChange={(e) => handleGameDataChange('price', parseFloat(e.target.value))}
               required

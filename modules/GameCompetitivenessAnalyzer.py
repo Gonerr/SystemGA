@@ -16,15 +16,6 @@ class GameCompetitivenessAnalyzer:
         self.extractor = FeatureExtractor()
         self.review_analyzer = ReviewAnalyzer(repository)
         self.ranker = ranker if ranker is not None else CompetitivenessRanker()
-
-        # self.WEIGHTS = {
-        #     "owners": 0.25,  # Доля игроков
-        #     "review_ratio": 0.20,  # Соотношение положительных отзывов
-        #     "revenue": 0.15,  # Выручка
-        #     "activity": 0.10,  # Активность сообщества
-        #     "freshness": 0.05,  # Новизна игры
-        #     "review_analysis": 0.25  # Анализ отзывов
-        # }
         self.schema = self.repository.get_encoding_schema()
 
     def save_competitiveness_score(self, game_id, score):
@@ -94,19 +85,14 @@ class GameCompetitivenessAnalyzer:
             if not similarities:
                 return 0.0
 
-            # Получаем признаки пользовательской игры
             user_features = user_game_data
-            
-            # Рассчитываем базовую оценку на основе похожих игр
             weighted_scores = []
             total_weight = 0
             
             for game_id, similarity in similarities.items():
-                # Используем предварительно рассчитанную оценку, если она есть
                 if competitiveness_scores and game_id in competitiveness_scores:
                     competitiveness = competitiveness_scores[game_id]
                 else:
-                    # Иначе рассчитываем на лету
                     game_data = self.repository.get_data_from_steam(game_id)
                     steamspy_data = self.repository.get_data_from_steamspy(game_id)
                     if not game_data or not steamspy_data:
@@ -123,9 +109,7 @@ class GameCompetitivenessAnalyzer:
 
             base_score = sum(weighted_scores) / total_weight
 
-            # Рассчитываем модификаторы на основе ключевых признаков
             modifiers = []
-            
             # 1. Модификатор на основе жанров
             genre_overlap = sum(1 for game_id in similarities.keys()
                               if any(genre in user_features['genres']
@@ -156,7 +140,6 @@ class GameCompetitivenessAnalyzer:
             print(f"Ошибка анализа конкурентоспособности: {str(e)}")
             return 0.0
 
-    # TODO: включить обработку отзывов при анализе конкурентной способности игры
     def analyze_competitiveness(self, game_ids):
         """
         Анализирует конкурентоспособность списка игр.
@@ -169,7 +152,6 @@ class GameCompetitivenessAnalyzer:
 
         for game_id in game_ids:
             try:
-                # Сначала проверяем, есть ли сохраненная оценка
                 saved_score = self.get_competitiveness_score(game_id)
                 if saved_score is not None:
                     scores.append((game_id, saved_score))
@@ -179,8 +161,7 @@ class GameCompetitivenessAnalyzer:
                 game_data = self.repository.get_data_from_steam(game_id)
                 steamspy_data = self.repository.get_data_from_steamspy(game_id)
                 score = float(self.calculate_competitiveness(game_data, steamspy_data))
-                
-                # Сохраняем новую оценку
+
                 self.save_competitiveness_score(game_id, score)
                 scores.append((game_id, score))
 
@@ -188,18 +169,14 @@ class GameCompetitivenessAnalyzer:
                 print(f"Ошибка анализа игры {game_id}: {str(e)}")
                 continue
 
-        # Сортировка по убыванию конкурентоспособности
         return sorted(scores, key=lambda x: x[1], reverse=True)
 
 
     def calculate_competitiveness(self, game_data, steamspy_data):
-        """
-        Метод расчета конкурентной способности игры
-        """
+        """ Метод расчета конкурентной способности игры """
         try:
             features = self.extract_features(game_data, steamspy_data)
 
-            # Используем настройки из ranker для расчета
             normalized_metrics = []
             for criterion in self.ranker.criteria:
                 match criterion:
@@ -209,7 +186,7 @@ class GameCompetitivenessAnalyzer:
                         value = features['positive_ratio']
                     case 'revenue':
                         value = self.normalize_value(features['revenue'], 
-                            float(float(self.schema['max_price'])*float(self.schema['max_owners']))/2)
+                            float(self.schema['sum_prices']))
                     case 'activity':
                         value = self.normalize_value(features['review_activity'] * 1000, self.schema['max_owners'])
                     case 'freshness':
@@ -220,11 +197,8 @@ class GameCompetitivenessAnalyzer:
                     case _:
                         continue
                 normalized_metrics.append(value)
-
-            # Используем коэффициенты важности из ranker
             competitiveness = np.sum(np.array(normalized_metrics) * np.array(self.ranker.importance_coefs))
 
-            # Применяем модификаторы для VR и мультиплеера
             vr_factor = 1.05 if features['is_vr'] else 1.0
             multiplayer_factor = 1.1 if features['is_multiplayer'] else 1.0
 
@@ -244,13 +218,11 @@ class GameCompetitivenessAnalyzer:
         if max_value <= 0:
             return 0.0
 
-        steepness = 5.0  # Контролирует крутизну сигмоиды
+        steepness = 5.0
         return expit((value / max_value) * steepness)
 
     def _get_game_features(self, features, game_id, review_analysis):
-        """
-        Вспомогательный метод для получения признаков игры
-        """
+        """Вспомогательный метод для получения признаков игры """
         game_features = {}
         for criterion in self.ranker.criteria:
             match criterion:
@@ -273,21 +245,24 @@ class GameCompetitivenessAnalyzer:
 
     def get_top_games(self, num_games=100):
         url = f"https://steamspy.com/api.php?request=top100in2weeks"
-        response = requests.get(url)
-        if response.status_code == 200:
+        try:
+            response = requests.get(url)
+            response.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)
             return list(response.json().keys())[:num_games]
-        else:
-            return None
+        except requests.exceptions.RequestException as e:
+            print(f"Ошибка при получении топ игр со SteamSpy: {e}")
+            return []
+        except ValueError as e:
+            print(f"Ошибка декодирования JSON из SteamSpy: {e}")
+            return []
         
     def get_max_values(self, segment_data):
-        """
-        Получает максимальные значения для всех признаков
-        """
+        """ Получает максимальные значения для всех признаков """
 
         segment_max = {
             'owners': max(float(data.get('owners', 0)) for data in segment_data),
             'price': max(float(data.get('price', 0)) for data in segment_data),
-            'revenue': max(float(data.get('price', 0)) * float(data.get('owners', 0)) for data in segment_data),
+            'revenue': sum(float(data.get('price', 0)) * float(data.get('owners', 0)) for data in segment_data),
             'activity': max((float(data.get('positive', 0)) + float(data.get('negative', 0))) / 
                                 max(1, float(data.get('owners', 0))) for data in segment_data),
             'positive_ratio': 1.0,  # Максимальное значение для positive_ratio всегда 1.0 (100%)
@@ -298,9 +273,7 @@ class GameCompetitivenessAnalyzer:
         return segment_max
     
     def get_top_competitive_games(self, top_n=10):
-        """
-        Получает топ-N самых конкурентоспособных игр среди всех игр
-        """
+        """ Получает топ-N самых конкурентоспособных игр среди всех игр """
         try:
             # Получаем все игры
             all_games = self.get_top_games()#self.repository.get_all_games_list()
@@ -316,8 +289,6 @@ class GameCompetitivenessAnalyzer:
 
             segment_max = self.get_max_values(segment_data)
 
-        
-            # Подготавливаем данные для ранжирования
             games_data = []
             for game_id in game_ids:
                 game_data = self.repository.get_data_from_steam(game_id)
@@ -331,11 +302,9 @@ class GameCompetitivenessAnalyzer:
                         'game_id': game_id,
                         **game_features
                     })
-            
-            # Ранжируем игры с использованием настроек из ranker
+
             ranked_games = self.ranker.rank_games(games_data, segment_max)
-     
-            # Возвращаем топ-N игр
+
             return ranked_games[:top_n]
             
         except Exception as e:
@@ -343,27 +312,32 @@ class GameCompetitivenessAnalyzer:
             return []
 
     def get_top_competitive_games_by_genre(self, genre, top_n=10):
-        """
-        Получает топ-N самых конкурентоспособных игр в определенном жанре
-        """
+        """Получает топ-N самых конкурентоспособных игр в определенном жанре"""
         try:
-            # Получаем все игры с указанным жанром
-            all_games = self.get_top_games()
+            all_games = [int(g) for g in self.get_top_games()]
+            print('all_games (before query):', all_games)
+            print('genres:',genre)
             games = list(self.repository.game_features_collection.find(
-                {"genres": genre,
+                {"genres": {"$in": [genre]},
                 "game_id": {"$in": all_games}
                 },
                 {"_id": 0}
             ))
+            print('games',games)
+            if not games:
+                return []
             game_ids = [game['game_id'] for game in games]
             
+            print(f'game_ids: ',game_ids)
             # Получаем данные всех игр в сегменте один раз
             segment_data = []
             for game_id in game_ids:
                 game = self.repository.get_data_features_from_db(game_id)
                 if game:
                     segment_data.append(game)
-
+            print(segment_data)
+            if not segment_data:
+                return []
             segment_max = self.get_max_values(segment_data)
             
             # Подготавливаем данные для ранжирования
@@ -380,7 +354,7 @@ class GameCompetitivenessAnalyzer:
                         'game_id': game_id,
                         **game_features
                     })
-            
+            print(games_data)
             # Ранжируем игры с использованием настроек из ranker
             ranked_games = self.ranker.rank_games(games_data, segment_max)
             
@@ -397,7 +371,7 @@ class GameCompetitivenessAnalyzer:
         """
         try:
             # Получаем все игры в указанном диапазоне владельцев
-            all_games = self.get_top_games()
+            all_games = [int(g) for g in self.get_top_games()]
             games = list(self.repository.game_features_collection.find(
                 {
                     "owners": {

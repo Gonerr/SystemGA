@@ -189,13 +189,13 @@ const GameRatingDisplay = () => {
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Typography variant="body2" sx={{ mr: 1 }}>
                 {sortField === 'competitiveness_score' 
-                  ? `Сортировка по конкурентности (${sortDirection === 'asc' ? 'возрастанию' : 'убыванию'})`
-                  : 'Сортировать по конкурентности'}
+                  ? `Сортировка по ком.потенциалу (${sortDirection === 'asc' ? 'возрастанию' : 'убыванию'})`
+                  : 'Сортировать по ком.потенциалу'}
               </Typography>
               <IconButton 
                 onClick={() => handleSort('competitiveness_score')}
                 color={sortField === 'competitiveness_score' ? 'primary' : 'default'}
-                aria-label="Сортировать по конкурентной способности"
+                aria-label="Сортировать по ком.потенциалу"
               >
                 <SortIcon style={{ 
                   transform: sortField === 'competitiveness_score' && sortDirection === 'asc' ? 'rotate(180deg)' : 'none'

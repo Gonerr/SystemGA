@@ -25,7 +25,7 @@ class ReviewAnalyzer:
             'vote_score': 4,
             'features': 8
         }
-        self.weights = self._calculate_ahp_weights(self.quant_weights)
+        self.weights = self._calculate_weights(self.quant_weights)
 
     def analyze_reviews(self, game_id: str) -> Dict:
         """
@@ -189,12 +189,7 @@ class ReviewAnalyzer:
             print(f"Ошибка при расчете review score: {str(e)}")
             return 0.0
 
-    def _calculate_ahp_weights(self, quant_weights: dict) -> dict:
-        """
-        Рассчитывает веса методом анализа иерархий (AHP) с лог-чебышевской аппроксимацией.
-        quant_weights: dict {ключ: вес}
-        Возвращает dict {ключ: нормированный вес}
-        """
+    def _calculate_weights(self, quant_weights: dict) -> dict:
         keys = list(quant_weights.keys())
         n = len(keys)
         weights = [max(quant_weights[k], 1e-6) for k in keys]
