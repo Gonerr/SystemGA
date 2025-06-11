@@ -1,3 +1,19 @@
+This is a Decision Support System designed to automatically generate rankings for computer games. 
+
+The project is completed during the preparation of Anastaliya A. Likhachova's bachelor thesis at SPbPU Institute of Computer Science and Cybersecurity (SPbPU ICSC).
+
+
+Authors and Contributors
+Advisor and minor contributor: Vladimir A. Parkhomenko Senior Lecturer at SPbPU ICSC
+
+Main Contributor: Anastaliya A. Likhachova Student at SPbPU ICSC
+
+Reference (to be updated after publication):
+Please, using this repository, cite the following paper https://hsse.spbstu.ru/userfiles/files/1941_sovremennie_tehnologii_s_oblozhkoy.pdf, 2025
+
+LICENCE
+MIT?
+
 ## GamesAnalyzer
 Система для анализа и ранжирования конкурентоспособности компьютерных игр.
 Модульный Python backend (FastAPI, ML, MongoDB) и React frontend.
