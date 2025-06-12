@@ -124,10 +124,8 @@ class BaseAnalyzer:
         if num_games == 0:
             return []
 
-        # Batch encode descriptions
         description_embeddings = self.model.encode(descriptions).tolist()
 
-        # Batch binarize genres
         genre_binarizer = MultiLabelBinarizer(classes=schema["genres"])
 
         genre_binaries = genre_binarizer.fit_transform(genres_list).tolist()
