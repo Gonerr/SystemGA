@@ -268,11 +268,14 @@ class GameAnalysisPipeline:
 
     def similarities_search(self, user_game):
         # 1. Кластеризация
-        all_games_ids = [game['game_id'] for game in self.repository.get_all_games_list()]
-        
+        cluster_game_ids = self._perform_clustering(user_game)
+        if not cluster_game_ids:
+            cluster_game_ids = []
+        # print(f'cluster_game_ids = {cluster_game_ids}')
+    
         # 2. Анализ конкурентоспособности
-        high_competitive_ids, competitiveness_scores = self._analyze_competitiveness(all_games_ids)
-        
+        high_competitive_ids, competitiveness_scores = self._analyze_competitiveness(cluster_game_ids)
+       
         # 3. Поиск похожих игр
         similarity_scores = self._find_similar_games(user_game, high_competitive_ids)
         return similarity_scores
