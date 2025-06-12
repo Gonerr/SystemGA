@@ -6,7 +6,7 @@ The project is completed during the preparation of Anastaliya A. Likhachova's ba
 Authors and Contributors
 Advisor and minor contributor: Vladimir A. Parkhomenko Senior Lecturer at SPbPU ICSC
 
-Main Contributor: Anastaliya A. Likhachova Student at SPbPU ICSC
+Main Contributor: Anastasiya A. Likhacheva Student at SPbPU ICSC
 
 Reference (to be updated after publication):
 Please, using this repository, cite the following paper https://hsse.spbstu.ru/userfiles/files/1941_sovremennie_tehnologii_s_oblozhkoy.pdf, 2025
