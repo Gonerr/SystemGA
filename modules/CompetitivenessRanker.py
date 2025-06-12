@@ -65,7 +65,7 @@ class CompetitivenessRanker:
         weights = [2 ** (n - k - 1) for k in range(n)]
         total = sum(weights)
         coefs = [w / total for w in weights]
-        print(coefs)
+        
         return coefs
 
     def _normalize_scores(self, scores: List[float], max_values: List[float]) -> List[float]:
@@ -118,8 +118,8 @@ class CompetitivenessRanker:
         self._apply_quality_importance(variants)
         self._apply_quantitative_importance(variants)
 
-        print(variants)
-        print(self.importance_coefs)
+        # print(variants)
+        # print(self.importance_coefs)
         # Рассчитываем финальные оценки
         final_scores = []
         for variant in variants:

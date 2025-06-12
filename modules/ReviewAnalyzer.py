@@ -163,9 +163,7 @@ class ReviewAnalyzer:
         try:
             if total_reviews == 0:
                 return 0.0
-                
-            
-            
+                            
             # Нормализуем playtime (предполагаем, что 100 часов - это много)
             normalized_playtime = float(min(avg_playtime / 100, 1.0))
             
@@ -202,7 +200,7 @@ class ReviewAnalyzer:
         log_means = np.mean(logA, axis=1)
         raw_coefs = np.exp(log_means)
         norm_coefs = raw_coefs / np.sum(raw_coefs)
-        print(f'веса для отзывов: {norm_coefs}')
+        
         return {k: w for k, w in zip(keys, norm_coefs)}
 
     def _get_default_metrics(self) -> Dict:

@@ -243,6 +243,5 @@ class GameSimilarityAnalyzer:
         log_means = np.mean(logA, axis=1)
         raw_coefs = np.exp(log_means)
         norm_coefs = raw_coefs / np.sum(raw_coefs)
-        print(f'веса для схожести: {dict(zip(keys, norm_coefs))}')
         return {k: w for k, w in zip(keys, norm_coefs)}
 

@@ -48,7 +48,7 @@ class GameCompetitivenessAnalyzer:
             return None
 
     def extract_features(self, game_data, steamspy_data):
-        """ Извлекает и рассчитывает признаки для анализа конкурентоспособности """
+        """ Извлекает и рассчитывает признаки для анализа оценки """
         features = self.extractor.create_game_features(game_data, steamspy_data)
 
         # Дополнительные признаки
@@ -173,7 +173,7 @@ class GameCompetitivenessAnalyzer:
 
 
     def calculate_competitiveness(self, game_data, steamspy_data):
-        """ Метод расчета конкурентной способности игры """
+        """ Метод расчета оценки игры """
         try:
             features = self.extract_features(game_data, steamspy_data)
 
@@ -190,7 +190,10 @@ class GameCompetitivenessAnalyzer:
                     case 'activity':
                         value = self.normalize_value(features['review_activity'] * 1000, self.schema['max_owners'])
                     case 'freshness':
-                        value = 1 - self.normalize_value(features['age_days'], 356 * 20)
+                        if self.schema['max_release_date']:
+                            value = 1 - self.normalize_value(features['age_days'], self.schema['max_release_date'])
+                        else:
+                            value = 1 - self.normalize_value(features['age_days'], 365*20)
                     case 'review_score':
                         review_analysis = self.review_analyzer.analyze_reviews(str(game_data.get('game_id', '')))
                         value = review_analysis['review_score']
@@ -315,27 +318,22 @@ class GameCompetitivenessAnalyzer:
         """Получает топ-N самых конкурентоспособных игр в определенном жанре"""
         try:
             all_games = [int(g) for g in self.get_top_games()]
-            print('all_games (before query):', all_games)
-            print('genres:',genre)
             games = list(self.repository.game_features_collection.find(
                 {"genres": {"$in": [genre]},
                 "game_id": {"$in": all_games}
                 },
                 {"_id": 0}
             ))
-            print('games',games)
             if not games:
                 return []
             game_ids = [game['game_id'] for game in games]
             
-            print(f'game_ids: ',game_ids)
             # Получаем данные всех игр в сегменте один раз
             segment_data = []
             for game_id in game_ids:
                 game = self.repository.get_data_features_from_db(game_id)
                 if game:
                     segment_data.append(game)
-            print(segment_data)
             if not segment_data:
                 return []
             segment_max = self.get_max_values(segment_data)
@@ -354,7 +352,7 @@ class GameCompetitivenessAnalyzer:
                         'game_id': game_id,
                         **game_features
                     })
-            print(games_data)
+
             # Ранжируем игры с использованием настроек из ranker
             ranked_games = self.ranker.rank_games(games_data, segment_max)
             

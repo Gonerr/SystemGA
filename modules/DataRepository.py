@@ -1,3 +1,4 @@
+from datetime import datetime
 from pymongo import MongoClient
 import numpy as np
 
@@ -56,6 +57,7 @@ class DataRepository:
         max_metacritic = 0
         max_median_forever = 0
         count = len(games)
+        max_release_date = 0
 
         for game in games:
             genres.update(game["genres"])
@@ -66,7 +68,18 @@ class DataRepository:
             max_median_forever = max(game["median_forever"], max_median_forever)
             categories.update(game["categories"])
             max_metacritic = max(game["metacritic"], max_metacritic)
-
+            release_date = game["release_date"] 
+            if release_date:
+                try:
+                    release = datetime.strptime(release_date, '%d %b, %Y')
+                    age_days = (datetime.now() - release).days
+                    game['age_days'] = age_days
+                except:
+                    game['age_days'] = 365*40
+            else:
+                game['age_days'] = 365*40
+            max_release_date = max(release_date,max_release_date)
+            
         schema = {
             "genres": sorted(list(genres)),
             "categories": sorted(list(categories)),
@@ -76,6 +89,7 @@ class DataRepository:
             "max_median_forever": max_median_forever,
             "sum_prices": sum_prices,
             "max_owners": max_owners,
+            "max_release_date": max_release_date,
             "count": count
         }
         self.encoding_schema_collection.replace_one({}, schema, upsert=True)

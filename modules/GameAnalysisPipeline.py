@@ -144,7 +144,7 @@ class GameAnalysisPipeline:
             # Формирование результата
             rated_games = []
             for game_id, game_data in similar_games.items():
-                game_id_str = str(game_id)  # Convert to string for dictionary key
+                game_id_str = str(game_id)  
                 game_info = {
                     'game_id': game_id_str,
                     'name': game_data.get('name', ''),
@@ -171,16 +171,16 @@ class GameAnalysisPipeline:
             cluster_game_ids = self._perform_clustering(user_game)
             if not cluster_game_ids:
                 cluster_game_ids = []
-            print(f'cluster_game_ids = {cluster_game_ids}')
+            # print(f'cluster_game_ids = {cluster_game_ids}')
         
             # 2. Анализ конкурентоспособности
             high_competitive_ids, competitiveness_scores = self._analyze_competitiveness(cluster_game_ids)
-            print(f'high_competitive_ids = {high_competitive_ids}')
-            print(f'competitiveness_scores = {competitiveness_scores}')
+            # print(f'high_competitive_ids = {high_competitive_ids}')
+            # print(f'competitiveness_scores = {competitiveness_scores}')
         
             # 3. Поиск похожих игр
             similarity_scores = self._find_similar_games(user_game, high_competitive_ids)
-            print(f'similarity_scores = {similarity_scores}')
+            # print(f'similarity_scores = {similarity_scores}')
         
             # 4. Оценка конкурентоспособности целевой игры
             competitiveness_score = self._evaluate_game_competitiveness(
@@ -189,22 +189,22 @@ class GameAnalysisPipeline:
             high_competitive_ids, 
             competitiveness_scores
             )
-            print(f'competitiveness_score = {competitiveness_score}')
+            # print(f'competitiveness_score = {competitiveness_score}')
         
             # 5. Анализ уникальных особенностей
-            print("Starting unique features analysis")
-            print(f"Similar games IDs: {list(similarity_scores.keys())[:3]}")
+            # print("Starting unique features analysis")
+            # print(f"Similar games IDs: {list(similarity_scores.keys())[:3]}")
             similar_data = self._analyze_unique_features(
             user_game, 
             list(similarity_scores.keys())[:3]
             )
-            print(f"Similar data: {similar_data}")
+            # print(f"Similar data: {similar_data}")
             
             dissimilar_data = self._analyze_unique_features(
             user_game, 
             list(similarity_scores.keys())[-3:]
             )
-            print(f"Dissimilar data: {dissimilar_data}")
+            # print(f"Dissimilar data: {dissimilar_data}")
         
             # 6. Генерация рекомендаций
             game_recommendations = self._generate_recommendations(
@@ -212,7 +212,7 @@ class GameAnalysisPipeline:
             similar_data, 
             dissimilar_data
             )
-            print(f"Game recommendations: {game_recommendations}")
+            # print(f"Game recommendations: {game_recommendations}")
         
             # Получаем результаты анализа
             cluster_info = self.analyzer.get_cluster_info(self.clusterer.get_similar_games_for_user_game(user_game))
@@ -232,7 +232,7 @@ class GameAnalysisPipeline:
                 'recommendations': self._convert_numpy_types(game_recommendations)
             }
         
-            print(f"Final result keys: {result.keys()}")
+            # print(f"Final result keys: {result.keys()}")
             return result
 
         except Exception as e:
@@ -250,7 +250,6 @@ class GameAnalysisPipeline:
         cluster_game_ids = self._perform_clustering(user_game)
         if not cluster_game_ids:
             cluster_game_ids = []
-        print(f'cluster_game_ids = {cluster_game_ids}')
         
         # 2. Анализ конкурентоспособности
         high_competitive_ids, competitiveness_scores = self._analyze_competitiveness(cluster_game_ids)
@@ -273,8 +272,6 @@ class GameAnalysisPipeline:
         
         # 2. Анализ конкурентоспособности
         high_competitive_ids, competitiveness_scores = self._analyze_competitiveness(all_games_ids)
-        print(f'high_competitive_ids = {high_competitive_ids}')
-        print(f'competitiveness_scores = {competitiveness_scores}')
         
         # 3. Поиск похожих игр
         similarity_scores = self._find_similar_games(user_game, high_competitive_ids)
@@ -285,13 +282,10 @@ class GameAnalysisPipeline:
     def _perform_clustering(self, games_data):
         """Выполняет кластеризацию игр."""
         try:
-            # if self.analyzer.needs_reclustering():
-            #     self.clusterer.clusters()
 
             cluster_id = self.clusterer.get_similar_games_for_user_game(games_data)
             cluster_docs = self.analyzer.get_games_in_cluster(cluster_id)
             
-            # Извлекаем game_id из документов MongoDB
             cluster_game_ids = [doc['game_id'] for doc in cluster_docs]
             return cluster_game_ids
           
@@ -366,10 +360,10 @@ class GameAnalysisPipeline:
 
     def _analyze_unique_features(self, user_game: Dict, game_ids: List[int]) -> Dict:
         """Анализирует уникальные особенности игры"""
-        print(f"_analyze_unique_features called with game_ids: {game_ids}")
+        # print(f"_analyze_unique_features called with game_ids: {game_ids}")
         try:
             result = self.uniqueFeatures.compare_with_most_similar_and_dissimilar(user_game, game_ids)
-            print(f"_analyze_unique_features result: {result}")
+            # print(f"_analyze_unique_features result: {result}")
             return result
         except Exception as e:
             print(f"Error in _analyze_unique_features: {str(e)}")
