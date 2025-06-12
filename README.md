@@ -1,6 +1,6 @@
 This is a Decision Support System designed to automatically generate rankings for computer games. 
 
-The project is completed during the preparation of Anastaliya A. Likhachova's bachelor thesis at SPbPU Institute of Computer Science and Cybersecurity (SPbPU ICSC).
+The project is completed during the preparation of Anastasiya A. Likhacheva's bachelor thesis at SPbPU Institute of Computer Science and Cybersecurity (SPbPU ICSC).
 
 
 Authors and Contributors
